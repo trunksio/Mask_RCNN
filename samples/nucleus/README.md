@@ -30,3 +30,11 @@ python3 nucleus.py detect --dataset=/path/to/dataset --subset=stage1_test --weig
 ## Jupyter notebooks
 Two Jupyter notebooks are provided as well: `inspect_nucleus_data.ipynb` and `inspect_nucleus_model.ipynb`.
 They explore the dataset, run stats on it, and go through the detection process step by step.
+
+
+Competition entry:
+Prefered solution:
+python3 solution1.py train --dataset=/path/to/dataset --subset=train --weights=imagenet
+
+Secondary solution:
+python3 solution2.py train --dataset=/path/to/dataset --subset=train --weights=imagenet
