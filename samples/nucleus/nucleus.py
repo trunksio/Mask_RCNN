@@ -264,7 +264,6 @@ def train(model):
     dataset_val.load_nucleus(args.dataset, "val")
     dataset_val.prepare()
     
-    ben_aug=
     # Image augmentation
     # http://imgaug.readthedocs.io/en/latest/source/augmenters.html
     augmentation = iaa.SomeOf((0, 2), [
