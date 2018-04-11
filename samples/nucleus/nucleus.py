@@ -3,17 +3,24 @@ Mask R-CNN
 Train on the nuclei segmentation dataset from the
 Kaggle 2018 Data Science Bowl
 https://www.kaggle.com/c/data-science-bowl-2018/
+
 Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla
+
 ------------------------------------------------------------
+
 Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
+
     # Train a new model starting from ImageNet weights
     python3 nucleus.py train --dataset=/path/to/dataset --subset=train --weights=imagenet
+
     # Train a new model starting from specific weights file
     python3 nucleus.py train --dataset=/path/to/dataset --subset=train --weights=/path/to/weights.h5
+
     # Resume training a model that you had trained earlier
     python3 nucleus.py train --dataset=/path/to/dataset --subset=train --weights=last
+
     # Generate submission file
     python3 nucleus.py detect --dataset=/path/to/dataset --subset=train --weights=<last or /path/to/weights.h5>
 """
@@ -47,7 +54,7 @@ from mrcnn import model as modellib
 from mrcnn import visualize
 
 # Path to trained weights file
-COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+COCO_WEIGHTS_PATH = "/kaggle/data/mask_rcnn_coco.h5"
 
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
@@ -117,7 +124,7 @@ class NucleusConfig(Config):
 
     # Input image resizing
     # Random crops of size 512x512
-    IMAGE_RESIZE_MODE = "square"
+    IMAGE_RESIZE_MODE = "crop"
     IMAGE_MIN_DIM = 512
     IMAGE_MAX_DIM = 512
     IMAGE_MIN_SCALE = 2.0
@@ -177,6 +184,7 @@ class NucleusDataset(utils.Dataset):
 
     def load_nucleus(self, dataset_dir, subset):
         """Load a subset of the nuclei dataset.
+
         dataset_dir: Root directory of the dataset
         subset: Subset to load. Either the name of the sub-directory,
                 such as stage1_train, stage1_test, ...etc. or, one of:
@@ -255,7 +263,8 @@ def train(model):
     dataset_val = NucleusDataset()
     dataset_val.load_nucleus(args.dataset, "val")
     dataset_val.prepare()
-
+    
+    ben_aug=
     # Image augmentation
     # http://imgaug.readthedocs.io/en/latest/source/augmenters.html
     augmentation = iaa.SomeOf((0, 2), [
@@ -282,27 +291,19 @@ def train(model):
     print("Train all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE*10,
-                epochs=30,
-                augmentation=augmentation,
-                layers='4+')
-    
-    print("Train all layers")
-    model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE*10,
-                epochs=40,
-                augmentation=augmentation,
-                layers='all')
-    
-    print("Train all layers")
-    model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE*5,
-                epochs=70,
+                epochs=60,
                 augmentation=augmentation,
                 layers='all')
     print("Train all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=40,
+                epochs=90,
+                augmentation=augmentation,
+                layers='all')
+    print("Train all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE/10,
+                epochs=120,
                 augmentation=augmentation,
                 layers='all')
 
