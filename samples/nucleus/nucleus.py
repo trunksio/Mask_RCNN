@@ -3,24 +3,17 @@ Mask R-CNN
 Train on the nuclei segmentation dataset from the
 Kaggle 2018 Data Science Bowl
 https://www.kaggle.com/c/data-science-bowl-2018/
-
 Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla
-
 ------------------------------------------------------------
-
 Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
-
     # Train a new model starting from ImageNet weights
     python3 nucleus.py train --dataset=/path/to/dataset --subset=train --weights=imagenet
-
     # Train a new model starting from specific weights file
     python3 nucleus.py train --dataset=/path/to/dataset --subset=train --weights=/path/to/weights.h5
-
     # Resume training a model that you had trained earlier
     python3 nucleus.py train --dataset=/path/to/dataset --subset=train --weights=last
-
     # Generate submission file
     python3 nucleus.py detect --dataset=/path/to/dataset --subset=train --weights=<last or /path/to/weights.h5>
 """
@@ -100,9 +93,7 @@ VAL_IMAGE_IDS = [
 ############################################################
 
 class NucleusConfig(Config):
-    """Configuration for training on the toy  dataset.
-    Derives from the base Config class and overrides some values.
-    """
+    """Configuration for training on the nucleus segmentation dataset."""
     # Give the configuration a recognizable name
     NAME = "nucleus"
 
@@ -122,11 +113,11 @@ class NucleusConfig(Config):
 
     # Backbone network architecture
     # Supported values are: resnet50, resnet101
-    BACKBONE = "resnet50"
+    BACKBONE = "resnet101"
 
     # Input image resizing
     # Random crops of size 512x512
-    IMAGE_RESIZE_MODE = "crop"
+    IMAGE_RESIZE_MODE = "square"
     IMAGE_MIN_DIM = 512
     IMAGE_MAX_DIM = 512
     IMAGE_MIN_SCALE = 2.0
@@ -186,7 +177,6 @@ class NucleusDataset(utils.Dataset):
 
     def load_nucleus(self, dataset_dir, subset):
         """Load a subset of the nuclei dataset.
-
         dataset_dir: Root directory of the dataset
         subset: Subset to load. Either the name of the sub-directory,
                 such as stage1_train, stage1_test, ...etc. or, one of:
@@ -228,7 +218,8 @@ class NucleusDataset(utils.Dataset):
         """
         info = self.image_info[image_id]
         # Get mask directory from image path
-        mask_dir = os.path.join(info["path"].split("/images/")[0], "masks")
+        mask_dir = os.path.join(os.path.dirname(os.path.dirname(info['path'])), "masks")
+
         # Read mask files from .png image
         mask = []
         for f in next(os.walk(mask_dir))[2]:
@@ -283,11 +274,31 @@ def train(model):
     # since they have random weights
     print("Train network heads")
     model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE,
+                learning_rate=config.LEARNING_RATE*10,
                 epochs=20,
                 augmentation=augmentation,
                 layers='heads')
 
+    print("Train all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE*10,
+                epochs=30,
+                augmentation=augmentation,
+                layers='4+')
+    
+    print("Train all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE*10,
+                epochs=40,
+                augmentation=augmentation,
+                layers='all')
+    
+    print("Train all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE*5,
+                epochs=70,
+                augmentation=augmentation,
+                layers='all')
     print("Train all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
