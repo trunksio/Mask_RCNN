@@ -54,7 +54,7 @@ from mrcnn import model as modellib
 from mrcnn import visualize
 
 # Path to trained weights file
-COCO_WEIGHTS_PATH = "/kaggle/data/mask_rcnn_coco.h5"
+COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
@@ -120,7 +120,7 @@ class NucleusConfig(Config):
 
     # Backbone network architecture
     # Supported values are: resnet50, resnet101
-    BACKBONE = "resnet101"
+    BACKBONE = "resnet50"
 
     # Input image resizing
     # Random crops of size 512x512
@@ -252,18 +252,18 @@ class NucleusDataset(utils.Dataset):
 #  Training
 ############################################################
 
-def train(model):
+def train(model, dataset_dir, subset):
     """Train the model."""
     # Training dataset.
     dataset_train = NucleusDataset()
-    dataset_train.load_nucleus(args.dataset, "train")
+    dataset_train.load_nucleus(dataset_dir, subset)
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = NucleusDataset()
-    dataset_val.load_nucleus(args.dataset, "val")
+    dataset_val.load_nucleus(dataset_dir, "val")
     dataset_val.prepare()
-    
+
     # Image augmentation
     # http://imgaug.readthedocs.io/en/latest/source/augmenters.html
     augmentation = iaa.SomeOf((0, 2), [
@@ -282,27 +282,15 @@ def train(model):
     # since they have random weights
     print("Train network heads")
     model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE*10,
+                learning_rate=config.LEARNING_RATE,
                 epochs=20,
                 augmentation=augmentation,
                 layers='heads')
 
     print("Train all layers")
     model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE*10,
-                epochs=60,
-                augmentation=augmentation,
-                layers='all')
-    print("Train all layers")
-    model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=90,
-                augmentation=augmentation,
-                layers='all')
-    print("Train all layers")
-    model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE/10,
-                epochs=120,
+                epochs=40,
                 augmentation=augmentation,
                 layers='all')
 
@@ -347,6 +335,9 @@ def rle_decode(rle, shape):
 def mask_to_rle(image_id, mask, scores):
     "Encodes instance masks to submission format."
     assert mask.ndim == 3, "Mask must be [H, W, count]"
+    # If mask is empty, return line with image ID only
+    if mask.shape[-1] == 0:
+        return "{},".format(image_id)
     # Remove mask overlaps
     # Multiply each instance mask by its score order
     # then take the maximum across the last dimension
@@ -493,7 +484,7 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model)
+        train(model, args.dataset, args.subset)
     elif args.command == "detect":
         detect(model, args.dataset, args.subset)
     else:
